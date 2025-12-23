@@ -1,0 +1,7 @@
+{
+  "boilerplateMessage": "Boilerplate code for your Nextjs project",
+  "minifyHTML": "Minify HTML",
+  "css": "CSS",
+  "liveReload": "Live reload",
+  "cacheBusting": "Cache busting"
+}

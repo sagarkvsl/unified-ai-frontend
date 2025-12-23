@@ -1,0 +1,24 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: unified-ai-frontend
+  title: Unified-ai-frontend
+  annotations:
+    backstage.io/techdocs-ref: dir:docs
+    backstage.io/source-template: template:default/nextjs-boilerplate
+  labels:
+    generated: nextjs-boilerplate
+    language: javascript
+  tags:
+    - javascript
+    - react
+    - nextjs
+  links:
+    - url: https://app.brevo.com/${{parameters.route | slugify}}
+      title: Production url
+    - url: https://app-staging.51b.dev/${{parameters.route | slugify}}
+      title: Staging url
+spec:
+  type: website
+  lifecycle: experimental
+  owner: group:default/automation-engine-1

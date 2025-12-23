@@ -1,0 +1,60 @@
+{
+	"name": "nextjs",
+	"description": "Nextjs boilerplate (change me)",
+	"private": true,
+	"license": "MIT",
+	"engines": {
+		"node": ">=16.0.0",
+		"npm": "please-use-yarn",
+		"yarn": ">= 1.22.22"
+	},
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"build:prod": "npx @cloudflare/next-on-pages",
+		"build:staging": "env-cmd -f .env.staging npx @cloudflare/next-on-pages",
+		"start": "next start",
+		"lint": "next lint",
+		"prepare": "husky install",
+		"preinstall": "npx only-allow yarn",
+		"format": "prettier --write .",
+		"precommit": "lint-staged",
+		"test": "jest",
+		"test:watch": "jest --watch",
+		"test:ci": "jest -u --coverage --colors",
+		"optimiseTranslations": "node scripts/optimiseTranslations.js",
+		"fetchTranslations": "curl -s -H 'authKey:dce98150cd6d9706c1976a4ef3bsajdasb' -H 'CF-Access-Client-ID: 630d62fbf186b3e03f97d60c3a873ea2.access.sendinblue.com' -H 'CF-Access-Client-Secret: eac29251228169404c1c440185e111226fb813ea55b59d1a144d970369dfa46d' 'https://translations.51b.tech/translation/api/download-translation?projectId=<<projectId>>' | tar -xz --strip-components=2 --directory=src/translations"
+	},
+	"dependencies": {
+		"@dtsl/jsutils": "latest",
+		"@dtsl/react": "latest",
+		"@dtsl/react-utils": "latest",
+		"@dtsl/url-fetch": "latest",
+		"env-cmd": "^10.1.0",
+		"next": "^13.5.4",
+		"postcss": "8.4.31",
+		"react": "18.2.0",
+		"react-dom": "18.2.0",
+		"react-intl": "^6.4.4"
+	},
+	"devDependencies": {
+		"@cloudflare/next-on-pages": "^1.13.12",
+		"@testing-library/jest-dom": "5.17.0",
+		"@testing-library/react": "13.4.0",
+		"@testing-library/user-event": "14.6.1",
+		"autoprefixer": "10.4.14",
+		"babel-jest": "^29.6.1",
+		"eslint": "8.46.0",
+		"eslint-config-next": "13.4.13",
+		"eslint-config-prettier": "^9.0.0",
+		"husky": "^8.0.2",
+		"jest": "28.1.0",
+		"jest-environment-jsdom": "28.1.0",
+		"lint-staged": "^13.1.0",
+		"next-router-mock": "^0.9.2",
+		"prettier": "^3.0.3",
+		"tailwindcss": "3.3.3",
+		"vercel": "^48.1.0"
+	},
+	"packageManager": "yarn@1.22.22"
+}
