@@ -1,0 +1,19 @@
+# Exclude workflow-frontend from Next.js build
+workflow-frontend/
+workflow-frontend/**/*
+
+# Exclude deployment files
+rancher-deploy.yml
+scripts/
+Dockerfile
+
+# Exclude environment files (they're loaded by Next.js)
+.env.*
+!.env.example
+
+# Exclude documentation
+*.md
+!README.md
+
+# Exclude VS Code settings
+.vscode/

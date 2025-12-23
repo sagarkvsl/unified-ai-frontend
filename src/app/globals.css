@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-dark-950 text-white;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+  
+  .glass-strong {
+    @apply bg-white/10 backdrop-blur-2xl border border-white/20;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary-400 via-blue-400 to-purple-400 bg-clip-text text-transparent;
+  }
+  
+  .gradient-border {
+    @apply relative before:absolute before:inset-0 before:p-[1px] before:bg-gradient-to-r before:from-primary-400 before:via-blue-400 before:to-purple-400 before:rounded-lg;
+  }
+  
+  .gradient-border > * {
+    @apply relative bg-dark-900 rounded-lg;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-dark-900/50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary-600/50 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-600/70;
+}
+
+/* Chart.js Legend Text Color Override - Force white text */
+.chart-legend-white canvas + div,
+.chart-legend-white [data-testid*="legend"],
+.chart-legend-white div[style*="display: flex"] {
+  color: #ffffff !important;
+}
+
+.chart-legend-white canvas + div span,
+.chart-legend-white div span {
+  color: #ffffff !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+/* Target Chart.js legend items specifically */
+.chart-legend-white * {
+  color: #ffffff !important;
+}
+
+/* Override any Chart.js internal styles */
+canvas + div[style] span,
+div[style*="display"][style*="flex"] span {
+  color: #ffffff !important;
+}
+
+/* More specific Chart.js legend targeting */
+.chart-legend-white div[style*="display: flex"][style*="flex-wrap"] span,
+.chart-legend-white div[style*="color"] span {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+}
