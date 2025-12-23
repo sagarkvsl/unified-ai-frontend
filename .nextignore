@@ -1,7 +1,3 @@
-# Exclude workflow-frontend from Next.js build
-workflow-frontend/
-workflow-frontend/**/*
-
 # Exclude deployment files
 rancher-deploy.yml
 scripts/
