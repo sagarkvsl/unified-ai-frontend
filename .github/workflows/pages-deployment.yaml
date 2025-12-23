@@ -1,0 +1,38 @@
+name: 'Cloudflare Pages Deployment'
+
+on:
+    push:
+        branches-ignore:
+            - 'main'
+        tags-ignore:
+            - '**'
+    pull_request:
+        types: [opened]
+        branches:
+            - dev
+    workflow_dispatch:
+        inputs:
+            are_you_sure:
+                description: Are you sure you want to publish this branch/tag?'
+                required: true
+                type: choice
+                options:
+                    - yes
+                    - no
+
+concurrency:
+    group: ${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    publish:
+        uses: 'DTSL/workflows/.github/workflows/cf-pages-deployment.yaml@v1'
+        with:
+            APP_ROUTE_PATH: '${{ parameters.route | slugify}}'
+            CF_APP_DOMAIN: '${{ parameters.route | slugify}}'
+            PACKAGE_MANAGER: yarn
+            DEPENDENCIES_NODE_VERSION: '20.18.0'
+            BUILD_OUTPUT_DIRECTORY: './.vercel/output/static'
+            TRANSLATIONS_DIRECTORY: './src/translations/'
+            BUILD_COMMAND: ${{ (startsWith(github.ref_name, 'main') && 'yarn build:prod') || 'yarn build:staging' }}
+        secrets: inherit
