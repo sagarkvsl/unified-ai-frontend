@@ -1,6 +1,8 @@
 # Unified AI Frontend
 
-A modern, production-ready React frontend for the Unified AI Engine - Workflow debugging and automation analysis UI. Built with Next.js 14, TypeScript, and Tailwind CSS with comprehensive multi-environment deployment support.
+A modern, production-ready React frontend for the Brevo Debugging AI Assistant. Built with Next.js 14, TypeScript, and Tailwind CSS with comprehensive multi-environment deployment support.
+
+An AI-powered debugging system for internal Brevo teams (developers, QA, tech support, CX) to debug issues across various Brevo features including workflows, contacts, events, and more.
 
 ## 🚀 Features
 
@@ -8,7 +10,7 @@ A modern, production-ready React frontend for the Unified AI Engine - Workflow d
 - **Environment-Aware Configuration**: Dynamic API URL switching based on deployment environment
 - **Production-Ready**: Docker support, Kubernetes deployment, health checks, and monitoring
 - **Modern Tech Stack**: Next.js 14, TypeScript, Tailwind CSS, and modern React patterns
-- **Comprehensive Analytics**: Workflow analysis, stuck contact debugging, and real-time monitoring
+- **Comprehensive Debugging**: Multi-feature debugging including workflows, contacts, events, and real-time monitoring
 - **Deployment Automation**: Automated build, test, and deployment pipelines
 
 ## 📋 Table of Contents

@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: '🎯 Brevo Debugging AI Assistant',
-  description: 'AI-powered debugging system',
+  description: 'AI-powered debugging assistant for Brevo platform - Debug workflows, contacts, events & more',
   icons: {
     icon: '/favicon.ico',
   },

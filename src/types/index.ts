@@ -108,6 +108,38 @@ export interface BatchAnalysisResult {
   total_processed: number;
 }
 
+// Event Analytics Types
+export interface EventAnalyticsData {
+  event_name: string;
+  event_source: string;
+  total_events: number;
+  unique_contacts: number;
+  first_event: number;
+  last_event: number;
+}
+
+export interface EventAnalyticsResult {
+  success: boolean;
+  organization_id: number;
+  timeframe: string;
+  analytics: EventAnalyticsData[];
+  total_event_types: number;
+}
+
+export interface AIEventAnalyticsResponse {
+  success: boolean;
+  message: string;
+  tool_executed: string;
+  parameters_used: {
+    organizationId: number;
+    timeframe: string;
+  };
+  results: EventAnalyticsResult;
+  conversation_id: string;
+  timestamp: string;
+  ai_powered: boolean;
+}
+
 // API Error Type
 export class ApiError extends Error {
   constructor(

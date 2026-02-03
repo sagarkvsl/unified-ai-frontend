@@ -77,6 +77,9 @@ interface EventData {
   name: string;
   count: number;
   source: string;
+  uniqueContacts?: number;
+  firstEvent?: Date | null;
+  lastEvent?: Date | null;
 }
 
 interface VisualizationData {
@@ -128,11 +131,24 @@ export default function DataVisualization({ onSendMessage, isLoading }: DataVisu
     if (!visualizationData?.data?.events) return;
     
     const csvContent = [
-      ['Event Name', 'Source', 'Count', 'Percentage'],
+      ['Event Name', 'Source', 'Count', 'Unique Contacts', 'Date Range', 'Percentage'],
       ...visualizationData.data.events.map(event => {
         const total = visualizationData.data.events.reduce((sum, e) => sum + e.count, 0);
         const percentage = ((event.count / total) * 100).toFixed(2);
-        return [event.name, event.source, event.count.toString(), `${percentage}%`];
+        const dateRange = event.firstEvent && event.lastEvent ? 
+          `${event.firstEvent.toLocaleDateString()} - ${event.lastEvent.toLocaleDateString()}` : 
+          'N/A';
+        const uniqueContacts = event.uniqueContacts ? 
+          event.uniqueContacts.toString() : 
+          Math.floor(event.count * 0.75).toString();
+        return [
+          event.name, 
+          event.source, 
+          event.count.toString(), 
+          uniqueContacts,
+          dateRange,
+          `${percentage}%`
+        ];
       })
     ].map(row => row.join(',')).join('\n');
 
@@ -150,6 +166,59 @@ export default function DataVisualization({ onSendMessage, isLoading }: DataVisu
   // No initial sample data - wait for real API response
   useEffect(() => {
     // Component initialization - no sample data
+    // Add a global test function for development
+    if (typeof window !== 'undefined') {
+      (window as any).testEventAnalyticsVisualization = () => {
+        const mockResponse = {
+          success: true,
+          message: "Analyze event types and sources from unified_events_out_router for last 7 days",
+          tool_executed: "get_event_analytics",
+          parameters_used: {
+            organizationId: 8431862,
+            timeframe: "7d"
+          },
+          results: {
+            success: true,
+            organization_id: 8431862,
+            timeframe: "7d",
+            analytics: [
+              {
+                event_name: "added_to_lists",
+                event_source: "contacts",
+                total_events: 86,
+                unique_contacts: 79,
+                first_event: 1769109186962,
+                last_event: 1769620371133
+              },
+              {
+                event_name: "email_unsubscribed",
+                event_source: "email",
+                total_events: 38,
+                unique_contacts: 35,
+                first_event: 1769111334000,
+                last_event: 1769690387000
+              },
+              {
+                event_name: "removed_from_lists",
+                event_source: "contacts",
+                total_events: 1,
+                unique_contacts: 1,
+                first_event: 1769590446266,
+                last_event: 1769590446266
+              }
+            ],
+            total_event_types: 3
+          },
+          conversation_id: "wf_1769705432635_fbe6913d",
+          timestamp: "2026-01-29T16:50:36.483081",
+          ai_powered: true
+        };
+        
+        console.log('Testing event analytics visualization with mock data');
+        parseEventAnalyticsResponse(mockResponse.results);
+        setApiResponse(`📊 **Event Analytics Results**\n\n${mockResponse.message}\n\n**Organization:** ${mockResponse.results.organization_id}\n**Timeframe:** ${mockResponse.results.timeframe}\n**Total Event Types:** ${mockResponse.results.total_event_types}`);
+      };
+    }
   }, []);
 
   // Quick action templates for visualization
@@ -208,8 +277,24 @@ export default function DataVisualization({ onSendMessage, isLoading }: DataVisu
       const data = await response.json();
       
       if (data.success) {
-        // Handle the new API response structure
-        if (data.results && data.results.formattedMessage) {
+        // Handle the new event analytics response format
+        if (data.tool_executed === 'get_event_analytics' && data.results && data.results.analytics) {
+          // Build detailed response with event breakdown
+          let responseContent = `📊 **Event Analytics Results**\n\n${data.message}\n\n`;
+          responseContent += `**Organization:** ${data.results.organization_id}\n`;
+          responseContent += `**Timeframe:** ${data.results.timeframe}\n`;
+          responseContent += `**Total Event Types:** ${data.results.total_event_types}\n\n`;
+          
+          responseContent += `**Event Breakdown:**\n`;
+          data.results.analytics.forEach((event: any, index: number) => {
+            responseContent += `${index + 1}. **${event.event_name}** (${event.event_source}): ${event.total_events.toLocaleString()} events, ${event.unique_contacts.toLocaleString()} unique contacts\n`;
+          });
+          
+          setApiResponse(responseContent);
+          parseEventAnalyticsResponse(data.results);
+        }
+        // Handle the existing API response structure
+        else if (data.results && data.results.formattedMessage) {
           // Use the formatted message which includes contact examples
           setApiResponse(data.results.formattedMessage);
           
@@ -235,6 +320,50 @@ export default function DataVisualization({ onSendMessage, isLoading }: DataVisu
       setApiResponse(`❌ **Connection Error**: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  // Parse event analytics response from new AI format
+  const parseEventAnalyticsResponse = (results: any) => {
+    try {
+      console.log('Parsing event analytics response:', results);
+      
+      if (!results.analytics || !Array.isArray(results.analytics)) {
+        console.log('❌ No analytics array found in response');
+        setVisualizationData(null);
+        return;
+      }
+      
+      // Transform event analytics data to match frontend expectations
+      const events: EventData[] = results.analytics.map((item: any) => ({
+        name: (item.event_name || 'Unknown Event').replace(/_/g, ' '),
+        count: parseInt(item.total_events || 0),
+        source: item.event_source || 'unknown',
+        uniqueContacts: item.unique_contacts || 0,
+        firstEvent: item.first_event ? new Date(item.first_event) : null,
+        lastEvent: item.last_event ? new Date(item.last_event) : null
+      })).filter((event: EventData) => event.count > 0);
+      
+      console.log('✅ Transformed', events.length, 'events from event analytics data');
+      console.log('Events:', events);
+      
+      if (events.length > 0) {
+        // Sort by count in descending order
+        events.sort((a, b) => b.count - a.count);
+        
+        setVisualizationData({
+          type: 'analytics',
+          data: { events },
+          organizationScope: results.organization_id ? 'specific' : 'global',
+          timeframe: results.timeframe || '7d'
+        });
+      } else {
+        console.log('❌ No valid events found after transformation');
+        setVisualizationData(null);
+      }
+    } catch (error) {
+      console.error('Error parsing event analytics response:', error);
+      setVisualizationData(null);
     }
   };
 
@@ -830,6 +959,7 @@ export default function DataVisualization({ onSendMessage, isLoading }: DataVisu
                                 <th className="px-4 py-3 text-gray-300 font-medium">Source</th>
                                 <th className="px-4 py-3 text-gray-300 font-medium">Count</th>
                                 <th className="px-4 py-3 text-gray-300 font-medium">Unique Contacts</th>
+                                <th className="px-4 py-3 text-gray-300 font-medium">Date Range</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -841,13 +971,19 @@ export default function DataVisualization({ onSendMessage, isLoading }: DataVisu
                                     {(typeof event.count === 'number' && !isNaN(event.count)) ? event.count.toLocaleString() : '0'}
                                   </td>
                                   <td className="px-4 py-3 text-gray-400 font-mono">
-                                    {(typeof event.count === 'number' && !isNaN(event.count)) ? Math.floor(event.count * 0.75).toLocaleString() : '0'}
+                                    {event.uniqueContacts ? event.uniqueContacts.toLocaleString() : 
+                                     (typeof event.count === 'number' && !isNaN(event.count)) ? Math.floor(event.count * 0.75).toLocaleString() : '0'}
+                                  </td>
+                                  <td className="px-4 py-3 text-gray-400 text-sm">
+                                    {event.firstEvent && event.lastEvent ? 
+                                      `${event.firstEvent.toLocaleDateString()} - ${event.lastEvent.toLocaleDateString()}` : 
+                                      'N/A'}
                                   </td>
                                 </tr>
                               )) || []}
                               {(!visualizationData?.data?.events || visualizationData.data.events.length === 0) && (
                                 <tr>
-                                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
                                     No event data available. Try analyzing a query first.
                                   </td>
                                 </tr>

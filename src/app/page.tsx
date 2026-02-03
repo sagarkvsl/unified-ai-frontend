@@ -82,16 +82,23 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: `👋 **Welcome to the AI-Powered Brevo Debugging Assistant!**
+      content: `👋 **Welcome to the Brevo Debugging AI Assistant!**
 
-I'm a Debugging assistant that can analyze your Brevo features related issues using natural language. Just ask me questions in plain language!
+I'm your AI-powered debugging assistant for Brevo platform. I help developers, QA, tech support, CX, and all internal Brevo teams debug issues across various Brevo features using natural language queries.
 
+**What I can help you with:**
+• 🔄 **Workflows** - Debug automation workflows, execution paths, and contact flows
+• 👥 **Contacts** - Analyze contact behavior and stuck contacts
+• 📊 **Events** - Track event analytics and trends
+• 🔍 **And much more** - Ask questions about any Brevo feature!
+
+**Example questions:**
 📊 **"For client 4694108, how many contacts entered workflow 413?"**
-🔍 **"have we recieved any events from client 4694108 in the last few days?"**
+🔍 **"Have we received any events from client 4694108 in the last few days?"**
 🔍 **"Why did contact 300199 follow the NO path in workflow 413 step 15 for client 4694108?"**
 ⚙️ **"Show me execution statistics for workflow 139 for client 4694108"**
 
-✨ *I use OpenAI to understand your questions and automatically query the required databases to provide detailed statistical analysis and insights!*`,
+✨ *I use OpenAI to understand your questions and automatically query the required databases to provide detailed analysis and insights!*`,
       type: 'ai',
       timestamp: new Date(),
       status: 'success'
@@ -170,6 +177,71 @@ I'm a Debugging assistant that can analyze your Brevo features related issues us
         if (data.results && data.results.formattedMessage) {
           // Use the formatted message which includes contact examples
           responseContent = data.results.formattedMessage;
+        } else if (data.tool_executed === 'get_event_trends' && data.results && data.results.trends) {
+          // Handle event trends response format
+          responseContent = `📈 **Event Trends**\n\n`;
+          responseContent += data.message + `\n\n`;
+          
+          responseContent += `**Summary:**\n`;
+          responseContent += `• Organization ID: ${data.results.organization_id}\n`;
+          responseContent += `• Timeframe: ${data.results.timeframe}\n`;
+          responseContent += `• Total Data Points: ${data.results.total_rows}\n\n`;
+          
+          // Group trends by event name for better display
+          const eventGroups: { [key: string]: { source: string, count: number, hours: number[] } } = {};
+          data.results.trends.forEach((trend: any) => {
+            const key = trend.event_name;
+            if (!eventGroups[key]) {
+              eventGroups[key] = { source: trend.event_source, count: 0, hours: [] };
+            }
+            eventGroups[key].count += trend.event_count;
+            eventGroups[key].hours.push(trend.hour);
+          });
+          
+          responseContent += `**Event Breakdown:**\n`;
+          Object.entries(eventGroups).forEach(([eventName, data]: [string, any], index: number) => {
+            responseContent += `${index + 1}. **${eventName}** (${data.source})\n`;
+            responseContent += `   • Total Events: ${data.count.toLocaleString()}\n`;
+            responseContent += `   • Data Points: ${data.hours.length}\n\n`;
+          });
+          
+          responseContent += `*Analysis generated: ${new Date(data.timestamp).toLocaleString()}*`;
+        } else if (data.tool_executed === 'get_event_analytics' && data.results && data.results.analytics) {
+          // Handle event analytics response format
+          responseContent = `📊 **Event Analytics Results**\n\n`;
+          responseContent += data.message + `\n\n`;
+          
+          // Add summary statistics
+          const totalEvents = data.results.analytics.reduce((sum: number, item: any) => sum + item.total_events, 0);
+          const totalContacts = data.results.analytics.reduce((sum: number, item: any) => sum + item.unique_contacts, 0);
+          
+          responseContent += `**Summary:**\n`;
+          responseContent += `• Organization ID: ${data.results.organization_id}\n`;
+          responseContent += `• Timeframe: ${data.results.timeframe}\n`;
+          responseContent += `• Total Event Types: ${data.results.total_event_types}\n`;
+          responseContent += `• Total Events: ${totalEvents.toLocaleString()}\n`;
+          responseContent += `• Total Unique Contacts: ${totalContacts.toLocaleString()}\n\n`;
+          
+          // Add detailed event breakdown
+          responseContent += `**Event Breakdown:**\n`;
+          data.results.analytics.forEach((event: any, index: number) => {
+            const firstDate = new Date(event.first_event).toLocaleDateString();
+            const lastDate = new Date(event.last_event).toLocaleDateString();
+            responseContent += `${index + 1}. **${event.event_name}** (${event.event_source})\n`;
+            responseContent += `   • Total Events: ${event.total_events.toLocaleString()}\n`;
+            responseContent += `   • Unique Contacts: ${event.unique_contacts.toLocaleString()}\n`;
+            responseContent += `   • Date Range: ${firstDate} - ${lastDate}\n\n`;
+          });
+          
+          // Add timestamp
+          responseContent += `*Analysis generated: ${new Date(data.timestamp).toLocaleString()}*`;
+          
+          // Also update WorkflowAnalytics component if available
+          if (typeof window !== 'undefined' && (window as any).handleEventAnalyticsResponse) {
+            setTimeout(() => {
+              (window as any).handleEventAnalyticsResponse(data);
+            }, 100);
+          }
         } else if (data.results && data.results.answer && data.results.answer.summary) {
           // For detailed analysis responses, show the comprehensive summary
           responseContent = data.results.answer.summary;
@@ -203,6 +275,47 @@ I'm a Debugging assistant that can analyze your Brevo features related issues us
           if (data.results.processingTimeHuman) {
             responseContent += `\n\n*Processing time: ${data.results.processingTimeHuman}*`;
           }
+        } else if (data.tool_executed === 'get_workflow_execution_statistics' && data.results) {
+          // Handle workflow execution statistics response
+          const results = data.results;
+          responseContent = `📊 **Workflow Execution Statistics**\n\n`;
+          responseContent += data.message + `\n\n`;
+          
+          responseContent += `**Details:**\n`;
+          responseContent += `• Organization ID: ${results.organization_id}\n`;
+          responseContent += `• Workflow ID: ${results.workflow_id}\n`;
+          if (results.execution_type) responseContent += `• Execution Type: ${results.execution_type}\n`;
+          if (results.timeframe) responseContent += `• Timeframe: ${results.timeframe}\n`;
+          responseContent += `\n**Results:**\n`;
+          responseContent += `• Total Logs: ${results.total_logs?.toLocaleString() || 0}\n`;
+          responseContent += `• Unique Contacts: ${results.unique_contacts?.toLocaleString() || 0}\n`;
+          if (results.entry_events !== undefined) responseContent += `• Entry Events: ${results.entry_events?.toLocaleString() || 0}\n`;
+          
+          if (results.summary) {
+            responseContent += `\n**Summary:** ${results.summary}`;
+          }
+          
+          responseContent += `\n\n*Analysis generated: ${new Date(data.timestamp).toLocaleString()}*`;
+        } else if (data.results && data.results.summary) {
+          // Generic handler for any tool response with a summary field
+          responseContent = `📊 **${data.tool_executed ? data.tool_executed.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Analysis'} Results**\n\n`;
+          responseContent += data.message + `\n\n`;
+          responseContent += `**Summary:** ${data.results.summary}\n\n`;
+          
+          // Display other relevant fields from results
+          const excludeKeys = ['tool', 'summary'];
+          Object.entries(data.results).forEach(([key, value]) => {
+            if (!excludeKeys.includes(key) && value !== null && value !== undefined) {
+              const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+              if (typeof value === 'number') {
+                responseContent += `• ${formattedKey}: ${value.toLocaleString()}\n`;
+              } else if (typeof value === 'string' || typeof value === 'boolean') {
+                responseContent += `• ${formattedKey}: ${value}\n`;
+              }
+            }
+          });
+          
+          responseContent += `\n*Analysis generated: ${new Date(data.timestamp).toLocaleString()}*`;
         } else {
           // Fallback to other response formats
           responseContent = data.result || data.response || data.message;
@@ -283,7 +396,67 @@ I'm a Debugging assistant that can analyze your Brevo features related issues us
       // Extract detailed response content
       let responseContent = '';
       if (data.success) {
-        if (data.results && data.results.answer && data.results.answer.summary) {
+        if (data.results && data.results.formattedMessage) {
+          // Use the formatted message which includes contact examples
+          responseContent = data.results.formattedMessage;
+        } else if (data.tool_executed === 'get_event_trends' && data.results && data.results.trends) {
+          // Handle event trends response format
+          responseContent = `📈 **Event Trends**\n\n`;
+          responseContent += data.message + `\n\n`;
+          
+          responseContent += `**Summary:**\n`;
+          responseContent += `• Organization ID: ${data.results.organization_id}\n`;
+          responseContent += `• Timeframe: ${data.results.timeframe}\n`;
+          responseContent += `• Total Data Points: ${data.results.total_rows}\n\n`;
+          
+          // Group trends by event name for better display
+          const eventGroups: { [key: string]: { source: string, count: number, hours: number[] } } = {};
+          data.results.trends.forEach((trend: any) => {
+            const key = trend.event_name;
+            if (!eventGroups[key]) {
+              eventGroups[key] = { source: trend.event_source, count: 0, hours: [] };
+            }
+            eventGroups[key].count += trend.event_count;
+            eventGroups[key].hours.push(trend.hour);
+          });
+          
+          responseContent += `**Event Breakdown:**\n`;
+          Object.entries(eventGroups).forEach(([eventName, eventData]: [string, any], index: number) => {
+            responseContent += `${index + 1}. **${eventName}** (${eventData.source})\n`;
+            responseContent += `   • Total Events: ${eventData.count.toLocaleString()}\n`;
+            responseContent += `   • Data Points: ${eventData.hours.length}\n\n`;
+          });
+          
+          responseContent += `*Analysis generated: ${new Date(data.timestamp).toLocaleString()}*`;
+        } else if (data.tool_executed === 'get_event_analytics' && data.results && data.results.analytics) {
+          // Handle event analytics response format
+          responseContent = `📊 **Event Analytics Results**\n\n`;
+          responseContent += data.message + `\n\n`;
+          
+          // Add summary statistics
+          const totalEvents = data.results.analytics.reduce((sum: number, item: any) => sum + item.total_events, 0);
+          const totalContacts = data.results.analytics.reduce((sum: number, item: any) => sum + item.unique_contacts, 0);
+          
+          responseContent += `**Summary:**\n`;
+          responseContent += `• Organization ID: ${data.results.organization_id}\n`;
+          responseContent += `• Timeframe: ${data.results.timeframe}\n`;
+          responseContent += `• Total Event Types: ${data.results.total_event_types}\n`;
+          responseContent += `• Total Events: ${totalEvents.toLocaleString()}\n`;
+          responseContent += `• Total Unique Contacts: ${totalContacts.toLocaleString()}\n\n`;
+          
+          // Add detailed event breakdown
+          responseContent += `**Event Breakdown:**\n`;
+          data.results.analytics.forEach((event: any, index: number) => {
+            const firstDate = new Date(event.first_event).toLocaleDateString();
+            const lastDate = new Date(event.last_event).toLocaleDateString();
+            responseContent += `${index + 1}. **${event.event_name}** (${event.event_source})\n`;
+            responseContent += `   • Total Events: ${event.total_events.toLocaleString()}\n`;
+            responseContent += `   • Unique Contacts: ${event.unique_contacts.toLocaleString()}\n`;
+            responseContent += `   • Date Range: ${firstDate} - ${lastDate}\n\n`;
+          });
+          
+          responseContent += `*Analysis generated: ${new Date(data.timestamp).toLocaleString()}*`;
+        } else if (data.results && data.results.answer && data.results.answer.summary) {
           // For detailed analysis responses, show the comprehensive summary
           responseContent = data.results.answer.summary;
           
@@ -316,6 +489,47 @@ I'm a Debugging assistant that can analyze your Brevo features related issues us
           if (data.results.processingTimeHuman) {
             responseContent += `\n\n*Processing time: ${data.results.processingTimeHuman}*`;
           }
+        } else if (data.tool_executed === 'get_workflow_execution_statistics' && data.results) {
+          // Handle workflow execution statistics response
+          const results = data.results;
+          responseContent = `📊 **Workflow Execution Statistics**\n\n`;
+          responseContent += data.message + `\n\n`;
+          
+          responseContent += `**Details:**\n`;
+          responseContent += `• Organization ID: ${results.organization_id}\n`;
+          responseContent += `• Workflow ID: ${results.workflow_id}\n`;
+          if (results.execution_type) responseContent += `• Execution Type: ${results.execution_type}\n`;
+          if (results.timeframe) responseContent += `• Timeframe: ${results.timeframe}\n`;
+          responseContent += `\n**Results:**\n`;
+          responseContent += `• Total Logs: ${results.total_logs?.toLocaleString() || 0}\n`;
+          responseContent += `• Unique Contacts: ${results.unique_contacts?.toLocaleString() || 0}\n`;
+          if (results.entry_events !== undefined) responseContent += `• Entry Events: ${results.entry_events?.toLocaleString() || 0}\n`;
+          
+          if (results.summary) {
+            responseContent += `\n**Summary:** ${results.summary}`;
+          }
+          
+          responseContent += `\n\n*Analysis generated: ${new Date(data.timestamp).toLocaleString()}*`;
+        } else if (data.results && data.results.summary) {
+          // Generic handler for any tool response with a summary field
+          responseContent = `📊 **${data.tool_executed ? data.tool_executed.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) : 'Analysis'} Results**\n\n`;
+          responseContent += data.message + `\n\n`;
+          responseContent += `**Summary:** ${data.results.summary}\n\n`;
+          
+          // Display other relevant fields from results
+          const excludeKeys = ['tool', 'summary'];
+          Object.entries(data.results).forEach(([key, value]) => {
+            if (!excludeKeys.includes(key) && value !== null && value !== undefined) {
+              const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+              if (typeof value === 'number') {
+                responseContent += `• ${formattedKey}: ${value.toLocaleString()}\n`;
+              } else if (typeof value === 'string' || typeof value === 'boolean') {
+                responseContent += `• ${formattedKey}: ${value}\n`;
+              }
+            }
+          });
+          
+          responseContent += `\n*Analysis generated: ${new Date(data.timestamp).toLocaleString()}*`;
         } else {
           // Fallback to other response formats
           responseContent = data.result || data.response || data.message;
@@ -380,7 +594,7 @@ I'm a Debugging assistant that can analyze your Brevo features related issues us
                     Brevo Debugging AI Assistant
                   </h1>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Ask questions about workflow automation issues • Get instant analysis • Debug workflow execution and steps analysis
+                    Debug Brevo platform issues • Get instant analysis • Support for workflows, contacts, events & more
                   </p>
                 </div>
               </div>
@@ -626,7 +840,7 @@ I'm a Debugging assistant that can analyze your Brevo features related issues us
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Ask me anything about your workflows in natural language... (e.g., 'For client 4694108, how many contacts entered workflow 413?' or 'Show me success rates for workflow analytics')"
+                    placeholder="Ask me anything about Brevo in natural language... (e.g., 'For client 4694108, how many contacts entered workflow 413?' or 'Show me events for client 4694108')"
                     className="w-full bg-dark-800/50 border border-white/10 rounded-xl px-3 py-2 pr-12 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none min-h-[50px] max-h-24"
                     rows={2}
                   />

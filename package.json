@@ -1,7 +1,7 @@
 {
   "name": "unified-ai-frontend",
   "version": "1.0.0",
-  "description": "Clean React frontend for Unified AI Engine - Workflow debugging and automation analysis UI",
+  "description": "Brevo Debugging AI Assistant - AI-powered debugging system for internal Brevo teams",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
