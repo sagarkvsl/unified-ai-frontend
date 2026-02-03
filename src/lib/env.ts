@@ -60,7 +60,9 @@ function loadEnvironmentConfig(): EnvironmentConfig {
                  process.env.NODE_ENV || 
                  'local';
 
-  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+  // Default API URL - using production domain for all environments as requested
+  const defaultApiUrl = 'https://unified-ai-engine-api.brevo.tech';
+  const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || defaultApiUrl;
 
   return {
     APP_ENV: appEnv,

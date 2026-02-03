@@ -4,23 +4,27 @@
 const loadEnvConfig = () => {
   const appEnv = process.env.APP_ENV || process.env.NODE_ENV || 'local';
   
+  // Using production domain for all environments as requested
+  // unified-ai-engine-api.brevo.tech
+  const productionDomain = 'https://unified-ai-engine-api.brevo.tech';
+  
   // Environment-specific API configurations
   const envConfigs = {
     local: {
-      apiBaseUrl: 'http://localhost:3000',
-      rewriteDestination: 'http://localhost:3000',
+      apiBaseUrl: productionDomain,
+      rewriteDestination: productionDomain,
     },
     development: {
-      apiBaseUrl: 'https://unified-ai-api-dev.brevo.com',
-      rewriteDestination: 'https://unified-ai-api-dev.brevo.com',
+      apiBaseUrl: productionDomain,
+      rewriteDestination: productionDomain,
     },
     staging: {
-      apiBaseUrl: 'https://unified-ai-api-staging.brevo.com',
-      rewriteDestination: 'https://unified-ai-api-staging.brevo.com',
+      apiBaseUrl: productionDomain,
+      rewriteDestination: productionDomain,
     },
     production: {
-      apiBaseUrl: 'https://unified-ai-api.brevo.com',
-      rewriteDestination: 'https://unified-ai-api.brevo.com',
+      apiBaseUrl: productionDomain,
+      rewriteDestination: productionDomain,
     },
   };
 

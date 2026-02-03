@@ -6,6 +6,9 @@ import {
   isDebugMode 
 } from '@/lib/env';
 
+// Force Node.js runtime to allow process.uptime() and process.memoryUsage()
+export const runtime = 'nodejs';
+
 /**
  * Health check endpoint for Kubernetes liveness and readiness probes
  * Returns application status and environment information
